@@ -1,13 +1,24 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetContainer
+
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization") version "1.7.21"
     id("com.android.library")
     id("com.squareup.sqldelight")
+    id("com.google.devtools.ksp")
 }
 
 group = "com.jetbrains.handson"
 version = "1.0"
 
+
+fun KotlinSourceSetContainer.configureKsp(targetName: String) {
+    runCatching {
+        sourceSets.configureEach {
+            kotlin.srcDir("build/generated/ksp/$targetName/$name/kotlin")
+        }
+    }
+}
 kotlin {
     android()
 
@@ -21,11 +32,14 @@ kotlin {
         }
     }
 
-    val ktorVersion = "2.0.2"
+    val ktorVersion = "2.2.2"
     val sqlDelightVersion = "1.5.3"
     val coroutinesVersion = "1.6.2"
     val dateTimeVersion = "0.4.0"
-
+    val inject = "0.5.1"
+    targets.configureEach {
+        kotlin.configureKsp(name)
+    }
     sourceSets {
 
         val commonMain by getting {
@@ -36,7 +50,9 @@ kotlin {
                 implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
                 implementation("com.squareup.sqldelight:runtime:$sqlDelightVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:$dateTimeVersion")
+                implementation("me.tatarka.inject:kotlin-inject-runtime:$inject")
             }
+            kotlin.srcDir("build/generated/ksp/")
         }
 
         val commonTest by getting {
@@ -48,6 +64,7 @@ kotlin {
             dependencies {
                 implementation("io.ktor:ktor-client-android:$ktorVersion")
                 implementation("com.squareup.sqldelight:android-driver:$sqlDelightVersion")
+                implementation("javax.inject:javax.inject:1")
             }
         }
         val androidTest by getting
@@ -75,6 +92,23 @@ kotlin {
             iosSimulatorArm64Test.dependsOn(this)
         }
     }
+}
+
+dependencies {
+    add("kspCommonMainMetadata", "me.tatarka.inject:kotlin-inject-compiler-ksp:0.5.1")
+    add("kspAndroid", "me.tatarka.inject:kotlin-inject-compiler-ksp:0.5.1")
+    add("kspIosX64", "me.tatarka.inject:kotlin-inject-compiler-ksp:0.5.1")
+    add("kspIosArm64", "me.tatarka.inject:kotlin-inject-compiler-ksp:0.5.1")
+    add("kspIosSimulatorArm64", "me.tatarka.inject:kotlin-inject-compiler-ksp:0.5.1")
+//    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+//        if (name != "kspCommonMainKotlinMetadata") {
+//            dependsOn("kspCommonMainKotlinMetadata")
+//        }
+//    }
+}
+
+ksp {
+    arg("me.tatarka.inject.enableJavaxAnnotations", "true")
 }
 
 android {

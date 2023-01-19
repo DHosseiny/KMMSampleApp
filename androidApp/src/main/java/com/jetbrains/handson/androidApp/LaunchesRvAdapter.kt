@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.jetbrains.handson.kmm.shared.entity.RocketLaunch
+import com.jetbrains.handson.kmm.shared.uimain.RocketLaunch
 
 class LaunchesRvAdapter(var launches: List<RocketLaunch>) : RecyclerView.Adapter<LaunchesRvAdapter.LaunchViewHolder>() {
 

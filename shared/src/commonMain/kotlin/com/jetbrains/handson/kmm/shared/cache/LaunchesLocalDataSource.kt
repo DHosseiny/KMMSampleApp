@@ -2,11 +2,12 @@ package com.jetbrains.handson.kmm.shared.cache
 
 import com.jetbrains.handson.kmm.shared.entity.Links
 import com.jetbrains.handson.kmm.shared.entity.Patch
-import com.jetbrains.handson.kmm.shared.entity.RocketLaunch
+import com.jetbrains.handson.kmm.shared.entity.RocketLaunchDto
+import me.tatarka.inject.annotations.Inject
 
-internal class Database(databaseDriverFactory: DatabaseDriverFactory) {
-    private val database = AppDatabase(databaseDriverFactory.createDriver())
-    private val dbQuery = database.appDatabaseQueries
+@Inject
+class LaunchesLocalDataSource(appDatabase: AppDatabase) {
+    private val dbQuery = appDatabase.appDatabaseQueries
 
     internal fun clearDatabase() {
         dbQuery.transaction {
@@ -14,7 +15,7 @@ internal class Database(databaseDriverFactory: DatabaseDriverFactory) {
         }
     }
 
-    internal fun getAllLaunches(): List<RocketLaunch> {
+    internal fun getAllLaunches(): List<RocketLaunchDto> {
         return dbQuery.selectAllLaunchesInfo(::mapLaunchSelecting).executeAsList()
     }
 
@@ -27,8 +28,8 @@ internal class Database(databaseDriverFactory: DatabaseDriverFactory) {
         patchUrlSmall: String?,
         patchUrlLarge: String?,
         articleUrl: String?
-    ): RocketLaunch {
-        return RocketLaunch(
+    ): RocketLaunchDto {
+        return RocketLaunchDto(
             flightNumber = flightNumber.toInt(),
             missionName = missionName,
             details = details,
@@ -44,7 +45,7 @@ internal class Database(databaseDriverFactory: DatabaseDriverFactory) {
         )
     }
 
-    internal fun createLaunches(launches: List<RocketLaunch>) {
+    internal fun createLaunches(launches: List<RocketLaunchDto>) {
         dbQuery.transaction {
             launches.forEach { launch ->
                 insertLaunch(launch)
@@ -52,7 +53,7 @@ internal class Database(databaseDriverFactory: DatabaseDriverFactory) {
         }
     }
 
-    private fun insertLaunch(launch: RocketLaunch) {
+    private fun insertLaunch(launch: RocketLaunchDto) {
         dbQuery.insertLaunch(
             flightNumber = launch.flightNumber.toLong(),
             missionName = launch.missionName,
